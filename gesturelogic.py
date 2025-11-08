@@ -50,25 +50,33 @@ class GestureEngine:
                 last['hold_start'] = None
             if label.startswith('r'):
                 if pinch_ti and not last.get('pinch_ti'):
-                    events.append({'type':'left_click','hand':'right'})
+                    confidence = 1.0 - (d_ti / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'left_click','hand':'right', 'confidence': confidence})
                 if pinch_im and not last.get('pinch_im'):
-                    events.append({'type':'right_click','hand':'right'})
+                    confidence = 1.0 - (d_im / self.cfg.TWO_FINGER_THRESHOLD)
+                    events.append({'type':'right_click','hand':'right', 'confidence': confidence})
                 if pinch_tm and not last.get('pinch_tm'):
-                    events.append({'type':'middle_click','hand':'right'})
+                    confidence = 1.0 - (d_tm / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'middle_click','hand':'right', 'confidence': confidence})
                 if pinch_ti and last.get('hold_start') and (time.time()-last['hold_start'])>self.cfg.HOLD_TIME:
                     events.append({'type':'drag','hand':'right'})
                 if pinch_im and abs(vy)>0.02:
                     dir = 'scroll_down' if vy>0 else 'scroll_up'
-                    events.append({'type':dir,'hand':'right','amount':vy})
+                    confidence = min(1.0, abs(vy) / 0.04)
+                    events.append({'type':dir,'hand':'right','amount':vy, 'confidence': confidence})
                 if pinch_im and abs(vx)>0.02:
                     dir = 'hscroll_right' if vx>0 else 'hscroll_left'
-                    events.append({'type':dir,'hand':'right','amount':vx})
+                    confidence = min(1.0, abs(vx) / 0.04)
+                    events.append({'type':dir,'hand':'right','amount':vx, 'confidence': confidence})
                 if tap3 and abs(vx)>0.06:
-                    events.append({'type':'app_switch','hand':'right'})
+                    confidence = min(1.0, abs(vx) / 0.1)
+                    events.append({'type':'app_switch','hand':'right', 'confidence': confidence})
                 if tap3 and vy < -0.06:
-                    events.append({'type':'task_view','hand':'right'})
+                    confidence = min(1.0, abs(vy) / 0.1)
+                    events.append({'type':'task_view','hand':'right', 'confidence': confidence})
                 if tap3 and vy > 0.06:
-                    events.append({'type':'show_desktop','hand':'right'})
+                    confidence = min(1.0, abs(vy) / 0.1)
+                    events.append({'type':'show_desktop','hand':'right', 'confidence': confidence})
                 if tap3 and abs(vx)<0.01 and abs(vy)<0.01:
                     events.append({'type':'screenshot','hand':'right'})
                 # virtual desktops and snap left/right approximations
@@ -76,9 +84,11 @@ class GestureEngine:
                 # omitted explicit 4-finger calc for brevity
             else:
                 if pinch_ti and not last.get('pinch_ti'):
-                    events.append({'type':'volume_up','hand':'left'})
+                    confidence = 1.0 - (d_ti / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'volume_up','hand':'left', 'confidence': confidence})
                 if pinch_tm and not last.get('pinch_tm'):
-                    events.append({'type':'volume_down','hand':'left'})
+                    confidence = 1.0 - (d_tm / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'volume_down','hand':'left', 'confidence': confidence})
                 if tap3 and not last.get('tap3'):
                     events.append({'type':'mute_unmute','hand':'left'})
                 prev_h_any = None
@@ -90,10 +100,15 @@ class GestureEngine:
                 if prev_h_any:
                     prev_d = dist(prev_h_any['index'], prev_h_any['middle'])
                     cur_d = dist(ch['index'], ch['middle'])
-                    if cur_d - prev_d > 0.02: events.append({'type':'brightness_up','hand':'left'})
-                    if prev_d - cur_d > 0.02: events.append({'type':'brightness_down','hand':'left'})
+                    if cur_d - prev_d > 0.02:
+                        confidence = min(1.0, (cur_d - prev_d) / 0.04)
+                        events.append({'type':'brightness_up','hand':'left', 'confidence': confidence})
+                    if prev_d - cur_d > 0.02:
+                        confidence = min(1.0, (prev_d - cur_d) / 0.04)
+                        events.append({'type':'brightness_down','hand':'left', 'confidence': confidence})
                 if abs(vx)>0.08 and abs(vy)<0.05:
-                    events.append({'type':'next_track' if vx>0 else 'prev_track','hand':'left'})
+                    confidence = min(1.0, abs(vx) / 0.12)
+                    events.append({'type':'next_track' if vx>0 else 'prev_track','hand':'left', 'confidence': confidence})
                 if pinch_ti and last.get('hold_start') and (time.time()-last['hold_start'])>0.5:
                     events.append({'type':'modifier_hold','hand':'left'})
             last['pinch_ti'] = pinch_ti
@@ -114,15 +129,18 @@ class GestureEngine:
                     prev_dist = dist(prev_pair[0]['index'], prev_pair[1]['index'])
                     cur_dist = dist(a['index'], b['index'])
                     if cur_dist - prev_dist > 0.02:
-                        events.append({'type':'zoom_in','hand':'both'})
+                        confidence = min(1.0, (cur_dist - prev_dist) / 0.04)
+                        events.append({'type':'zoom_in','hand':'both', 'confidence': confidence})
                     if prev_dist - cur_dist > 0.02:
-                        events.append({'type':'zoom_out','hand':'both'})
+                        confidence = min(1.0, (prev_dist - cur_dist) / 0.04)
+                        events.append({'type':'zoom_out','hand':'both', 'confidence': confidence})
             try:
                 va = (a['index'][0]-a['wrist'][0], a['index'][1]-a['wrist'][1])
                 vb = (b['index'][0]-b['wrist'][0], b['index'][1]-b['wrist'][1])
                 ang = math.atan2(va[1],va[0]) - math.atan2(vb[1],vb[0])
                 if abs(ang) > 0.3:
-                    events.append({'type':'rotate','hand':'both','angle':ang})
+                    confidence = min(1.0, abs(ang) / 0.5)
+                    events.append({'type':'rotate','hand':'both','angle':ang, 'confidence': confidence})
             except Exception:
                 pass
             wrist_dist = dist(a['wrist'], b['wrist'])
@@ -133,5 +151,7 @@ class GestureEngine:
             k = e['type']
             last = self.last_emitted.get(k, 0)
             if time.time() - last > self.cfg.COOLDOWN:
-                final.append(e); self.last_emitted[k] = time.time()
+                if e.get('confidence', 1.0) > 0.5:
+                    final.append(e)
+                    self.last_emitted[k] = time.time()
         return final
