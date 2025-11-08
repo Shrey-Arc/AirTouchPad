@@ -2,7 +2,11 @@ import cv2, mediapipe as mp
 from utils.config import Config
 class HandTracker:
 <<<<<<< HEAD
+<<<<<<< HEAD
     def __init__(self, cfg: Config, camera_index: int = 0, model_complexity: int = 0):
+=======
+    def __init__(self, cfg: Config):
+>>>>>>> parent of b389732 (modified using gcli)
 =======
     def __init__(self, cfg: Config):
 >>>>>>> parent of b389732 (modified using gcli)

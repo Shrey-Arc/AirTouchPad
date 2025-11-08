@@ -77,6 +77,7 @@ class MainGUI:
         left_panel.pack(side="left", fill="both", expand=True, padx=(0, 15))
         
 <<<<<<< HEAD
+<<<<<<< HEAD
         # Camera selection
         camera_frame = tk.Frame(left_panel, bg=self.bg_color)
         camera_frame.pack(fill="x", pady=(0, 20))
@@ -111,6 +112,8 @@ class MainGUI:
                                              state="readonly")
         model_complexity_menu.pack(side="left", fill="x", expand=True)
         
+=======
+>>>>>>> parent of b389732 (modified using gcli)
 =======
 >>>>>>> parent of b389732 (modified using gcli)
         # Start/Stop button
@@ -206,9 +209,13 @@ is minimized to tray.
     def start_core(self):
         try:
 <<<<<<< HEAD
+<<<<<<< HEAD
             camera_index = self.camera_var.get()
             model_complexity = self.model_complexity_var.get().split(" ")[0]
             self.core_process = subprocess.Popen([sys.executable, 'beast_core.py', str(camera_index), str(model_complexity)],
+=======
+            self.core_process = subprocess.Popen([sys.executable, 'beast_core.py'],
+>>>>>>> parent of b389732 (modified using gcli)
 =======
             self.core_process = subprocess.Popen([sys.executable, 'beast_core.py'],
 >>>>>>> parent of b389732 (modified using gcli)

@@ -13,6 +13,7 @@ def write_status(d):
 
 def main():
 <<<<<<< HEAD
+<<<<<<< HEAD
     import sys
     camera_index = 0
     model_complexity = 0
@@ -28,6 +29,10 @@ def main():
             pass
     cfg = Config()
     tracker = HandTracker(cfg, camera_index, model_complexity)
+=======
+    cfg = Config()
+    tracker = HandTracker(cfg)
+>>>>>>> parent of b389732 (modified using gcli)
 =======
     cfg = Config()
     tracker = HandTracker(cfg)

@@ -204,6 +204,7 @@ SOFTWARE.
     
     def show_page(self, page_num):
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.current_page = page_num
 
         # Clear previous page
@@ -230,11 +231,23 @@ SOFTWARE.
         # Create new page
         page_frame = self.pages[page_num]()
         page_frame.pack(fill="both", expand=True)
+=======
+        # Clear container
+        for widget in self.container.winfo_children():
+            widget.destroy()
+        
+        # Create new page
+        page_frame = self.pages[page_num]()
+        page_frame.pack(fill="both", expand=True)
+>>>>>>> parent of b389732 (modified using gcli)
         
         # Navigation buttons
         nav_frame = tk.Frame(self.container, bg=self.bg_color)
         nav_frame.pack(side="bottom", fill="x", pady=(20, 0))
         
+<<<<<<< HEAD
+>>>>>>> parent of b389732 (modified using gcli)
+=======
 >>>>>>> parent of b389732 (modified using gcli)
         if page_num > 0:
             back_btn = tk.Button(nav_frame, text="← Back",
@@ -247,6 +260,7 @@ SOFTWARE.
         
         if page_num < len(self.pages) - 1:
 <<<<<<< HEAD
+<<<<<<< HEAD
             if page_num == 1:  # License
                 cmd = lambda: self.proceed_from_license(page_num) # Fix: Correct lambda for license page
             elif page_num == 2:  # Dependencies auto-run
@@ -256,6 +270,8 @@ SOFTWARE.
                 ).start()
                 return
 =======
+=======
+>>>>>>> parent of b389732 (modified using gcli)
             if page_num == 1:  # License page
                 next_btn = tk.Button(nav_frame, text="Next →",
                                    command=lambda: self.proceed_from_license(page_num),
@@ -267,6 +283,9 @@ SOFTWARE.
                 # Start installation automatically
                 threading.Thread(target=self.install_dependencies, daemon=True).start()
                 return  # No next button, will auto-proceed
+<<<<<<< HEAD
+>>>>>>> parent of b389732 (modified using gcli)
+=======
 >>>>>>> parent of b389732 (modified using gcli)
             else:
                 next_btn = tk.Button(nav_frame, text="Next →",
