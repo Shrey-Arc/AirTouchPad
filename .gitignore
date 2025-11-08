@@ -125,5 +125,4 @@ cython_debug/
 
 # Garbage log files
 MANIFEST.in
-tempCodeRunnerFile.py
 .first_run
