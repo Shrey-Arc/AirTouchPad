@@ -50,11 +50,14 @@ class GestureEngine:
                 last['hold_start'] = None
             if label.startswith('r'):
                 if pinch_ti and not last.get('pinch_ti'):
-                    events.append({'type':'left_click','hand':'right'})
+                    confidence = 1.0 - (d_ti / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'left_click','hand':'right', 'confidence': confidence})
                 if pinch_im and not last.get('pinch_im'):
-                    events.append({'type':'right_click','hand':'right'})
+                    confidence = 1.0 - (d_im / self.cfg.TWO_FINGER_THRESHOLD)
+                    events.append({'type':'right_click','hand':'right', 'confidence': confidence})
                 if pinch_tm and not last.get('pinch_tm'):
-                    events.append({'type':'middle_click','hand':'right'})
+                    confidence = 1.0 - (d_tm / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'middle_click','hand':'right', 'confidence': confidence})
                 if pinch_ti and last.get('hold_start') and (time.time()-last['hold_start'])>self.cfg.HOLD_TIME:
                     events.append({'type':'drag','hand':'right'})
                 if pinch_im and abs(vy)>0.02:
@@ -76,9 +79,11 @@ class GestureEngine:
                 # omitted explicit 4-finger calc for brevity
             else:
                 if pinch_ti and not last.get('pinch_ti'):
-                    events.append({'type':'volume_up','hand':'left'})
+                    confidence = 1.0 - (d_ti / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'volume_up','hand':'left', 'confidence': confidence})
                 if pinch_tm and not last.get('pinch_tm'):
-                    events.append({'type':'volume_down','hand':'left'})
+                    confidence = 1.0 - (d_tm / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type':'volume_down','hand':'left', 'confidence': confidence})
                 if tap3 and not last.get('tap3'):
                     events.append({'type':'mute_unmute','hand':'left'})
                 prev_h_any = None
