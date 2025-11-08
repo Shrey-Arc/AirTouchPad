@@ -126,3 +126,4 @@ cython_debug/
 # Garbage log files
 MANIFEST.in
 .first_run
+venv-AirTouchPad
