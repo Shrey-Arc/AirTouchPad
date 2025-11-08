@@ -1,11 +1,20 @@
 import platform
+from os_handlers import volume_up, volume_down, mute_toggle, media_play_pause, media_next, media_prev, lock_screen, set_brightness, open_notifications, open_quick_settings, is_wayland
+import time
+import shutil
+
 try:
     import pyautogui
     pyautogui.FAILSAFE = False
 except Exception:
     pyautogui = None
-from os_handlers import volume_up, volume_down, mute_toggle, media_play_pause, media_next, media_prev, lock_screen, set_brightness, open_notifications, open_quick_settings
-import time
+
+if is_wayland() and shutil.which('ydotool'):
+    from wayland_input import WaylandInput
+    input_backend = WaylandInput()
+else:
+    input_backend = pyautogui
+
 class EventMapper:
     def __init__(self, cfg):
         self.os = platform.system().lower()
@@ -14,33 +23,33 @@ class EventMapper:
         print('[EVENT]', t, g)
         try:
             if t == 'left_click':
-                if pyautogui: pyautogui.click()
+                if input_backend: input_backend.click()
             elif t == 'right_click':
-                if pyautogui: pyautogui.click(button='right')
+                if input_backend: input_backend.click(button='right')
             elif t == 'middle_click':
-                if pyautogui: pyautogui.click(button='middle')
+                if input_backend: input_backend.click(button='middle')
             elif t == 'drag':
-                if pyautogui: pyautogui.mouseDown()
+                if input_backend: input_backend.mouseDown()
             elif t == 'scroll_up':
-                if pyautogui: pyautogui.scroll(120)
+                if input_backend: input_backend.scroll(120)
             elif t == 'scroll_down':
-                if pyautogui: pyautogui.scroll(-120)
+                if input_backend: input_backend.scroll(-120)
             elif t == 'hscroll_right':
-                if pyautogui and hasattr(pyautogui,'hscroll'): pyautogui.hscroll(100)
+                if input_backend and hasattr(input_backend,'hscroll'): input_backend.hscroll(100)
             elif t == 'hscroll_left':
-                if pyautogui and hasattr(pyautogui,'hscroll'): pyautogui.hscroll(-100)
+                if input_backend and hasattr(input_backend,'hscroll'): input_backend.hscroll(-100)
             elif t == 'app_switch':
-                if pyautogui: pyautogui.hotkey('alt','tab')
+                if input_backend: input_backend.hotkey('alt','tab')
             elif t == 'task_view':
-                if pyautogui: pyautogui.hotkey('win','tab')
+                if input_backend: input_backend.hotkey('win','tab')
             elif t == 'show_desktop':
-                if pyautogui: pyautogui.hotkey('win','d')
+                if input_backend: input_backend.hotkey('win','d')
             elif t == 'screenshot':
-                if self.os=='windows' and pyautogui: pyautogui.hotkey('win','printscreen')
+                if self.os=='windows' and input_backend: input_backend.hotkey('win','printscreen')
             elif t == 'snap_left':
-                if pyautogui: pyautogui.hotkey('win','left')
+                if input_backend: input_backend.hotkey('win','left')
             elif t == 'snap_right':
-                if pyautogui: pyautogui.hotkey('win','right')
+                if input_backend: input_backend.hotkey('win','right')
             elif t == 'volume_up':
                 volume_up()
             elif t == 'volume_down':
@@ -61,11 +70,11 @@ class EventMapper:
             elif t == 'modifier_hold':
                 print('Modifier hold')
             elif t == 'enter':
-                if pyautogui: pyautogui.press('enter')
+                if input_backend: input_backend.press('enter')
             elif t == 'zoom_in':
-                if pyautogui: pyautogui.hotkey('ctrl','+')
+                if input_backend: input_backend.hotkey('ctrl','+')
             elif t == 'zoom_out':
-                if pyautogui: pyautogui.hotkey('ctrl','-')
+                if input_backend: input_backend.hotkey('ctrl','-')
             elif t == 'rotate':
                 print('Rotate', g.get('angle'))
             elif t == 'lock_screen':

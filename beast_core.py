@@ -12,8 +12,15 @@ def write_status(d):
     except: pass
 
 def main():
+    import sys
+    camera_index = 0
+    if len(sys.argv) > 1:
+        try:
+            camera_index = int(sys.argv[1])
+        except ValueError:
+            pass
     cfg = Config()
-    tracker = HandTracker(cfg)
+    tracker = HandTracker(cfg, camera_index)
     engine = GestureEngine(cfg)
     mapper = EventMapper(cfg)
     try:

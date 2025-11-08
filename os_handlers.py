@@ -1,12 +1,30 @@
-import platform, subprocess, sys, ctypes, shutil
+import platform, subprocess, sys, ctypes, shutil, os
 OS = platform.system().lower()
+
+def is_wayland():
+    return 'linux' in OS and os.environ.get('XDG_SESSION_TYPE') == 'wayland'
+
+def check_macos_permissions():
+    if 'darwin' in OS:
+        try:
+            from ApplicationServices import AXIsProcessTrustedWithOptions, kAXTrustedCheckOptionPrompt
+            options = {kAXTrustedCheckOptionPrompt: True}
+            trusted = AXIsProcessTrustedWithOptions(options)
+            return trusted
+        except ImportError:
+            # ApplicationServices is not available
+            return False
+        except Exception as e:
+            print(f"Error checking macOS permissions: {e}")
+            return False
+    return True
 
 def _run_cmd(cmd):
     try:
         subprocess.run(cmd, shell=isinstance(cmd, str), check=True)
         return True
     except Exception as e:
-        #print('cmd failed', cmd, e)
+        print('cmd failed', cmd, e)
         return False
 
 # Volume and media keys using pyautogui if available, else try platform-specific
@@ -20,16 +38,12 @@ def volume_up():
     if pyautogui:
         try: pyautogui.press('volumeup'); return True
         except: pass
-    if 'windows' in OS:
-        return _run_cmd('nircmd.exe changesysvolume 5000')
     return False
 
 def volume_down():
     if pyautogui:
         try: pyautogui.press('volumedown'); return True
         except: pass
-    if 'windows' in OS:
-        return _run_cmd('nircmd.exe changesysvolume -5000')
     return False
 
 def mute_toggle():
@@ -63,6 +77,9 @@ def lock_screen():
         try:
             ctypes.windll.user32.LockWorkStation(); return True
         except Exception:
+            if pyautogui:
+                try: pyautogui.hotkey('win', 'l'); return True
+                except: pass
             return _run_cmd('rundll32.exe user32.dll,LockWorkStation')
     if 'darwin' in OS:
         # macOS: use AppleScript to lock screen (fast-user-switch menu)
@@ -77,25 +94,19 @@ def lock_screen():
     return False
 
 # Brightness: attempt platform-specific commands. These often require privileges or helper tools.
+try:
+    import screen_brightness_control as sbc
+except ImportError:
+    sbc = None
+
 def set_brightness(percent:int):
-    percent = int(max(0, min(100, percent)))
-    if 'windows' in OS:
-        # Use PowerShell WMI call
-        cmd = f'powershell -Command "(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness({percent},0)"'
-        return _run_cmd(cmd)
-    if 'darwin' in OS:
-        # macOS: try 'brightness' CLI (not installed by default)
-        if shutil.which('brightness'):
-            return _run_cmd(f'brightness {percent/100.0}')
-        return False
-    if 'linux' in OS:
-        # try brightnessctl or xrandr as fallback
-        if shutil.which('brightnessctl'):
-            return _run_cmd(f'brightnessctl set {percent}%')
-        if shutil.which('xrandr'):
-            # xrandr cannot change backlight on most systems, fallback
+    if sbc:
+        try:
+            sbc.set_brightness(percent)
+            return True
+        except Exception as e:
+            print(f"Failed to set brightness: {e}")
             return False
-        return False
     return False
 
 # Notifications and quick settings

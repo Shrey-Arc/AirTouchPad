@@ -10,6 +10,9 @@ import threading
 import os
 from pathlib import Path
 from utils.system_tray import SystemTrayApp
+from os_handlers import check_macos_permissions
+
+import cv2
 
 class MainGUI:
     def __init__(self):
@@ -35,6 +38,24 @@ class MainGUI:
         
         # Handle window close
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # Check for macOS permissions
+        if not check_macos_permissions():
+            messagebox.showinfo(
+                "Permissions Required",
+                "AirTouchPad requires Accessibility permissions to control your computer. "
+                "Please go to System Preferences > Security & Privacy > Privacy > Accessibility "
+                "and add this application to the list of allowed apps."
+            )
+
+    def get_available_cameras(self):
+        cameras = []
+        for i in range(10):
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                cameras.append(i)
+                cap.release()
+        return cameras
     
     def create_ui(self):
         # Header
@@ -75,6 +96,24 @@ class MainGUI:
         # Left panel - Control buttons
         left_panel = tk.Frame(content, bg=self.bg_color)
         left_panel.pack(side="left", fill="both", expand=True, padx=(0, 15))
+        
+        # Camera selection
+        camera_frame = tk.Frame(left_panel, bg=self.bg_color)
+        camera_frame.pack(fill="x", pady=(0, 20))
+        
+        tk.Label(camera_frame, text="Select Camera:",
+                 font=("Segoe UI", 12),
+                 bg=self.bg_color, fg=self.fg_color).pack(side="left", padx=(0, 10))
+        
+        self.available_cameras = self.get_available_cameras()
+        self.camera_var = tk.StringVar(self.root)
+        if self.available_cameras:
+            self.camera_var.set(self.available_cameras[0])
+        
+        camera_menu = ttk.Combobox(camera_frame, textvariable=self.camera_var,
+                                   values=self.available_cameras,
+                                   state="readonly")
+        camera_menu.pack(side="left", fill="x", expand=True)
         
         # Start/Stop button
         self.toggle_btn = tk.Button(left_panel, text="🚀 Start AirTouchPad",
@@ -168,7 +207,8 @@ is minimized to tray.
     
     def start_core(self):
         try:
-            self.core_process = subprocess.Popen([sys.executable, 'beast_core.py'],
+            camera_index = self.camera_var.get()
+            self.core_process = subprocess.Popen([sys.executable, 'beast_core.py', str(camera_index)],
                                                 stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE)
             self.toggle_btn.config(text="⏹️ Stop AirTouchPad",
