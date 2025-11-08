@@ -10,13 +10,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="airtouchpad",
     version="1.0.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Shrey Kumar",
+    author_email="Shrey_Kumar@outlook.com",
     description="Control your computer with hand gestures using AI-powered computer vision",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/AirTouchPad",
+    url="https://github.com/Shrey-Arc/AirTouchPad",
     packages=find_packages(),
+    package_data={
+        "": ["hand_landmarker.task"],
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: End Users/Desktop",

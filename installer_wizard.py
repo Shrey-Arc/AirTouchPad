@@ -1,7 +1,3 @@
-# ============================================================================
-# FILE 2: installer_wizard.py
-# ============================================================================
-
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import subprocess
@@ -14,7 +10,7 @@ class InstallerWizard:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("AirTouchPad - Installation Wizard")
-        self.root.geometry("700x550")
+        self.root.geometry("750x650")
         self.root.resizable(False, False)
         
         # Modern color scheme
@@ -34,23 +30,27 @@ class InstallerWizard:
             self.create_completion_page
         ]
         
-        self.container = tk.Frame(self.root, bg=self.bg_color)
-        self.container.pack(fill="both", expand=True, padx=20, pady=20)
+        # Main container
+        main_container = tk.Frame(self.root, bg=self.bg_color)
+        main_container.pack(fill="both", expand=True)
         
-        # Frame to hold the current page content
-        self.page_container = tk.Frame(self.container, bg=self.bg_color)
-        self.page_container.pack(fill="both", expand=True)
+        # FIX: Separate containers for pages and navigation
+        # Page container - use pack with weight to prevent overlap
+        self.page_container = tk.Frame(main_container, bg=self.bg_color, height=500)
+        self.page_container.pack(fill="both", expand=True, padx=20, pady=(20, 0))
+        self.page_container.pack_propagate(False)  # Prevent shrinking
         
-        # Frame to hold navigation buttons
-        self.nav_container = tk.Frame(self.container, bg=self.bg_color)
-        self.nav_container.pack(fill="x", pady=(10, 0))
+        # Navigation container - fixed height at bottom
+        self.nav_container = tk.Frame(main_container, bg=self.bg_color, height=60)
+        self.nav_container.pack(fill="x", side="bottom", padx=20, pady=20)
+        self.nav_container.pack_propagate(False)  # Keep fixed height
         
         self.show_page(0)
         
     def create_welcome_page(self):
-        frame = tk.Frame(self.container, bg=self.bg_color)
+        # Create frame WITHOUT parent - will be packed later
+        frame = tk.Frame(self.page_container, bg=self.bg_color)
         
-        # Title
         title = tk.Label(frame, text="🎯 Welcome to AirTouchPad!", 
                         font=("Segoe UI", 28, "bold"),
                         fg=self.accent_color, bg=self.bg_color)
@@ -61,7 +61,6 @@ class InstallerWizard:
                            fg=self.fg_color, bg=self.bg_color)
         subtitle.pack(pady=(0, 30))
         
-        # Features
         features_text = '''
 ✨ 31 Unique Gesture Controls
 🖱️ Replace Mouse & Keyboard
@@ -90,7 +89,7 @@ class InstallerWizard:
         return frame
     
     def create_license_page(self):
-        frame = tk.Frame(self.container, bg=self.bg_color)
+        frame = tk.Frame(self.page_container, bg=self.bg_color)
         
         title = tk.Label(frame, text="📜 License Agreement",
                         font=("Segoe UI", 20, "bold"),
@@ -145,7 +144,7 @@ SOFTWARE.
         return frame
     
     def create_dependencies_page(self):
-        frame = tk.Frame(self.container, bg=self.bg_color)
+        frame = tk.Frame(self.page_container, bg=self.bg_color)
         
         title = tk.Label(frame, text="📦 Installing Dependencies",
                         font=("Segoe UI", 20, "bold"),
@@ -158,11 +157,9 @@ SOFTWARE.
                        fg=self.fg_color, bg=self.bg_color)
         info.pack(pady=10)
         
-        # Progress bar
         self.progress = ttk.Progressbar(frame, mode='indeterminate', length=400)
         self.progress.pack(pady=20)
         
-        # Output text
         output_frame = tk.Frame(frame, bg=self.bg_color)
         output_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
@@ -180,7 +177,7 @@ SOFTWARE.
         return frame
     
     def create_completion_page(self):
-        frame = tk.Frame(self.container, bg=self.bg_color)
+        frame = tk.Frame(self.page_container, bg=self.bg_color)
         
         title = tk.Label(frame, text="🎉 Installation Complete!",
                         font=("Segoe UI", 24, "bold"),
@@ -203,147 +200,56 @@ SOFTWARE.
         return frame
     
     def show_page(self, page_num):
-<<<<<<< HEAD
         self.current_page = page_num
-
-        # Clear previous page
+        
+        # Clear page container
         for widget in self.page_container.winfo_children():
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-        self.current_page = page_num
-
-        # Clear previous page
-        for widget in self.page_container.winfo_children(): # Fix: Clear page_container
             widget.destroy()
-
-        # Build new page inside page_container
+        
+        # Build new page - MUST pack it!
         page_frame = self.pages[page_num]()
         page_frame.pack(fill="both", expand=True)
-
-        # Clear navigation bar
+        
+        # Clear navigation container
         for widget in self.nav_container.winfo_children():
             widget.destroy()
-
-        nav_frame = tk.Frame(self.nav_container, bg=self.bg_color) # Fix: Create nav_frame inside nav_container
-        nav_frame.pack(fill="x", pady=(10, 0))
-
-        # BACK BUTTON
-=======
-        # Clear container
-        for widget in self.container.winfo_children():
->>>>>>> 7fb66be92748a3b0e4c8931c0efd4fc5a50abaff
-            widget.destroy()
-
-        # Build new page
-        page_frame = self.pages[page_num]()
-        page_frame.pack(fill="both", expand=True)
-<<<<<<< HEAD
-
-        # Clear navigation bar
-        for widget in self.nav_container.winfo_children():
-            widget.destroy()
-
-        nav_frame = tk.Frame(self.nav_container, bg=self.bg_color)
-        nav_frame.pack(fill="x", pady=(10, 0))
-
-        # BACK BUTTON
-=======
-=======
-        # Clear container
-        for widget in self.container.winfo_children():
-            widget.destroy()
         
-        # Create new page
-        page_frame = self.pages[page_num]()
-        page_frame.pack(fill="both", expand=True)
->>>>>>> parent of b389732 (modified using gcli)
-        
-        # Navigation buttons
-        nav_frame = tk.Frame(self.container, bg=self.bg_color)
-        nav_frame.pack(side="bottom", fill="x", pady=(20, 0))
-        
-<<<<<<< HEAD
->>>>>>> parent of b389732 (modified using gcli)
-=======
->>>>>>> parent of b389732 (modified using gcli)
->>>>>>> 7fb66be92748a3b0e4c8931c0efd4fc5a50abaff
+        # Create navigation buttons in nav_container
+        # Back button
         if page_num > 0:
-            tk.Button(
-                nav_frame, text="← Back",
-                command=lambda: self.show_page(page_num - 1),
-                font=("Segoe UI", 11),
-                bg="#3e3e4e", fg=self.fg_color,
-                padx=20, pady=8, relief="flat",
-                cursor="hand2"
-            ).pack(side="left")
-
-        # NEXT BUTTON
+            tk.Button(self.nav_container, text="← Back",
+                     command=lambda: self.show_page(page_num - 1),
+                     font=("Segoe UI", 11),
+                     bg="#3e3e4e", fg=self.fg_color,
+                     padx=20, pady=8, relief="flat",
+                     cursor="hand2").pack(side="left")
+        
+        # Next/Finish button
         if page_num < len(self.pages) - 1:
-<<<<<<< HEAD
-            if page_num == 1:  # License
-                cmd = lambda: self.proceed_from_license(page_num)
-            elif page_num == 2:  # Dependencies auto-run
-                threading.Thread(
-                    target=self.install_dependencies,
-                    daemon=True
-                ).start()
-                return
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-            if page_num == 1:  # License
-                cmd = lambda: self.proceed_from_license(page_num) # Fix: Correct lambda for license page
-            elif page_num == 2:  # Dependencies auto-run
-                threading.Thread(
-                    target=self.install_dependencies,
-                    daemon=True # Fix: Ensure thread is daemon
-                ).start()
-                return
-=======
-=======
->>>>>>> parent of b389732 (modified using gcli)
             if page_num == 1:  # License page
-                next_btn = tk.Button(nav_frame, text="Next →",
-                                   command=lambda: self.proceed_from_license(page_num),
-                                   font=("Segoe UI", 11, "bold"),
-                                   bg=self.accent_color, fg="#000",
-                                   padx=20, pady=8, relief="flat",
-                                   cursor="hand2")
-            elif page_num == 2:  # Dependencies page
-                # Start installation automatically
+                cmd = lambda: self.proceed_from_license(page_num)
+            elif page_num == 2:  # Dependencies page - auto-start
                 threading.Thread(target=self.install_dependencies, daemon=True).start()
-                return  # No next button, will auto-proceed
-<<<<<<< HEAD
->>>>>>> parent of b389732 (modified using gcli)
-=======
->>>>>>> parent of b389732 (modified using gcli)
->>>>>>> 7fb66be92748a3b0e4c8931c0efd4fc5a50abaff
+                return
             else:
                 cmd = lambda: self.show_page(page_num + 1)
-
-            tk.Button(
-                nav_frame, text="Next →",
-                command=cmd,
-                font=("Segoe UI", 11, "bold"),
-                bg=self.accent_color, fg="#000",
-                padx=20, pady=8, relief="flat",
-                cursor="hand2"
-            ).pack(side="right")
-
-        # FINISH BUTTON
+            
+            tk.Button(self.nav_container, text="Next →",
+                     command=cmd,
+                     font=("Segoe UI", 11, "bold"),
+                     bg=self.accent_color, fg="#000",
+                     padx=20, pady=8, relief="flat",
+                     cursor="hand2").pack(side="right")
         else:
-            tk.Button(
-                nav_frame, text="Finish ✓",
-                command=self.finish,
-                font=("Segoe UI", 11, "bold"),
-                bg=self.success_color, fg="#000",
-                padx=30, pady=8, relief="flat",
-                cursor="hand2"
-            ).pack(side="right")
-
+            tk.Button(self.nav_container, text="Finish ✓",
+                     command=self.finish,
+                     font=("Segoe UI", 11, "bold"),
+                     bg=self.success_color, fg="#000",
+                     padx=30, pady=8, relief="flat",
+                     cursor="hand2").pack(side="right")
+    
     def proceed_from_license(self, page_num):
-        if not self.accept_var.get(): # Fix: Check accept_var
+        if not self.accept_var.get():
             messagebox.showwarning("License Agreement",
                                  "You must accept the license agreement to continue.")
             return
@@ -356,6 +262,7 @@ SOFTWARE.
         # Define tags for colored text
         self.output_text.tag_config("success", foreground=self.success_color)
         self.output_text.tag_config("error", foreground=self.error_color)
+        
         requirements = [
             'opencv-python',
             'mediapipe',
@@ -378,13 +285,11 @@ SOFTWARE.
                 if result.returncode == 0:
                     self.output_text.insert("end", f"✓ {package} installed successfully\n", "success")
                 else:
-                    self.output_text.insert("end", f"⚠ Warning installing {package}\n", "error") # Use error tag for warnings
-                    # Consider raising an error or setting a flag for failed installation
-                    # For now, we'll just log it as an error in the output
+                    self.output_text.insert("end", f"⚠ Warning installing {package}\n", "error")
             except Exception as e:
                 self.output_text.insert("end", f"Error: {str(e)}\n", "error")
             
-            self.output_text.see("end") # Fix: Ensure output is visible
+            self.output_text.see("end")
         
         self.progress.stop()
         self.status_label.config(text="✓ Installation complete!",
@@ -392,7 +297,7 @@ SOFTWARE.
         self.output_text.insert("end", "\n" + "="*50 + "\n")
         self.output_text.insert("end", "Installation completed successfully!\n", "success")
         
-        # Auto-proceed after 2 seconds to completion page
+        # Auto-proceed after 2 seconds
         self.root.after(2000, lambda: self.show_page(3))
     
     def finish(self):

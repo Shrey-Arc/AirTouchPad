@@ -8,7 +8,9 @@ class Config:
         'HOLD_TIME': 0.35,
         'BUFFER_LEN': 8,
         'COOLDOWN': 0.25,
-        'DEBUG_OVERLAY': True
+        'DEBUG_OVERLAY': True,
+        'SMOOTHING_FACTOR': 0.5,
+        'CONFIDENCE_THRESHOLD': 0.6
     }
     def __init__(self, path=None):
         self.path = path or os.path.join(os.path.dirname(__file__), '..', 'config.json')

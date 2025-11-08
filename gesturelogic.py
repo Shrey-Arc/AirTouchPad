@@ -1,157 +1,120 @@
-# Full gesturelogic implementation for 31 gestures (heuristic) - integrated version
 import time, math, collections
 from utils.config import Config
-cfg = Config()
-def dist(a,b):
-    return math.hypot(a[0]-b[0], a[1]-b[1])
+
+def dist(a, b):
+    return math.hypot(a[0] - b[0], a[1] - b[1])
+
 class GestureEngine:
     def __init__(self, config=Config()):
         self.cfg = config
         self.history = collections.deque(maxlen=self.cfg.BUFFER_LEN)
         self.hand_hist = {}
         self.last_emitted = {}
-    def _make_hand_key(self, label, idx):
-        return f"{label}_{idx}"
+        self.smoothed_coords = {}
+
+    def _smooth_coords(self, key, new_coords):
+        """Apply exponential moving average to smoothen coordinates."""
+        if key not in self.smoothed_coords:
+            self.smoothed_coords[key] = new_coords
+        else:
+            alpha = self.cfg.SMOOTHING_FACTOR
+            self.smoothed_coords[key] = (
+                alpha * new_coords[0] + (1 - alpha) * self.smoothed_coords[key][0],
+                alpha * new_coords[1] + (1 - alpha) * self.smoothed_coords[key][1]
+            )
+        return self.smoothed_coords[key]
+
+    def _get_velocity(self, key, new_coords, prev_coords):
+        """Calculate velocity based on smoothed coordinates."""
+        smoothed_new = self._smooth_coords(key, new_coords)
+        smoothed_prev = self._smooth_coords(key + "_prev", prev_coords) # Store previous smoothed value
+        self.smoothed_coords[key + "_prev"] = smoothed_new # Update for next frame
+        
+        vx = smoothed_new[0] - smoothed_prev[0]
+        vy = smoothed_new[1] - smoothed_prev[1]
+        return vx, vy
+
+    def _calculate_confidence(self, *factors):
+        """Calculate a combined confidence score from multiple factors."""
+        score = sum(f for f in factors if f is not None) / len(factors)
+        return min(1.0, max(0.0, score))
+
     def _summarize(self, hands):
         s = []
         if not hands: return s
-        for idx,(lm,label) in enumerate(hands):
-            thumb = lm[4]; index = lm[8]; middle = lm[12]; ring = lm[16]; pinky = lm[20]; wrist = lm[0]
-            s.append({'label':label,'idx':idx,'thumb':thumb,'index':index,'middle':middle,'ring':ring,'pinky':pinky,'wrist':wrist})
+        for idx, (lm, label) in enumerate(hands):
+            s.append({
+                'label': label, 'idx': idx,
+                'thumb': lm[4], 'index': lm[8], 'middle': lm[12], 'ring': lm[16], 'pinky': lm[20], 'wrist': lm[0]
+            })
         return s
+
     def update(self, hands):
         now = time.time()
         summary = self._summarize(hands)
         self.history.append((now, summary))
         events = []
-        prev = self.history[-2][1] if len(self.history)>=2 else []
-        cur = summary
-        prev_map = {self._make_hand_key(h['label'],h['idx']):h for h in prev}
-        cur_map = {self._make_hand_key(h['label'],h['idx']):h for h in cur}
+        
+        prev_summary = self.history[-2][1] if len(self.history) >= 2 else []
+        cur_map = {f"{h['label']}_{h['idx']}": h for h in summary}
+        prev_map = {f"{h['label']}_{h['idx']}": h for h in prev_summary}
+
         for key, ch in cur_map.items():
-            label = ch['label']
+            prev_h = prev_map.get(key)
+            if not prev_h: continue
+
+            vx, vy = self._get_velocity(key, ch['wrist'], prev_h['wrist'])
+            
             d_ti = dist(ch['thumb'], ch['index'])
             d_im = dist(ch['index'], ch['middle'])
             d_tm = dist(ch['thumb'], ch['middle'])
+
             pinch_ti = d_ti < self.cfg.PINCH_THRESHOLD
             pinch_im = d_im < self.cfg.TWO_FINGER_THRESHOLD
             pinch_tm = d_tm < self.cfg.PINCH_THRESHOLD
-            tap3 = pinch_ti and pinch_im
-            prev_h = prev_map.get(key)
-            vx = vy = 0
-            if prev_h:
-                vx = ch['wrist'][0] - prev_h['wrist'][0]
-                vy = ch['wrist'][1] - prev_h['wrist'][1]
-            last = self.hand_hist.get(key, {'pinch_ti':False,'hold_start':None})
-            if pinch_ti:
-                if not last.get('pinch_ti'):
-                    last['hold_start'] = time.time()
-            else:
-                last['hold_start'] = None
-            if label.startswith('r'):
+            
+            last = self.hand_hist.get(key, {})
+            
+            # Gesture logic with improved confidence
+            if ch['label'].startswith('r'): # Right Hand
                 if pinch_ti and not last.get('pinch_ti'):
-                    confidence = 1.0 - (d_ti / self.cfg.PINCH_THRESHOLD)
-                    events.append({'type':'left_click','hand':'right', 'confidence': confidence})
+                    conf = self._calculate_confidence(1.0 - d_ti / self.cfg.PINCH_THRESHOLD, 1 if abs(vx) < 0.01 else 0.5)
+                    events.append({'type': 'left_click', 'confidence': conf})
+                
                 if pinch_im and not last.get('pinch_im'):
-                    confidence = 1.0 - (d_im / self.cfg.TWO_FINGER_THRESHOLD)
-                    events.append({'type':'right_click','hand':'right', 'confidence': confidence})
+                    conf = self._calculate_confidence(1.0 - d_im / self.cfg.TWO_FINGER_THRESHOLD)
+                    events.append({'type': 'right_click', 'confidence': conf})
+
                 if pinch_tm and not last.get('pinch_tm'):
-                    confidence = 1.0 - (d_tm / self.cfg.PINCH_THRESHOLD)
-                    events.append({'type':'middle_click','hand':'right', 'confidence': confidence})
-                if pinch_ti and last.get('hold_start') and (time.time()-last['hold_start'])>self.cfg.HOLD_TIME:
-                    events.append({'type':'drag','hand':'right'})
-                if pinch_im and abs(vy)>0.02:
-                    dir = 'scroll_down' if vy>0 else 'scroll_up'
-                    confidence = min(1.0, abs(vy) / 0.04)
-                    events.append({'type':dir,'hand':'right','amount':vy, 'confidence': confidence})
-                if pinch_im and abs(vx)>0.02:
-                    dir = 'hscroll_right' if vx>0 else 'hscroll_left'
-                    confidence = min(1.0, abs(vx) / 0.04)
-                    events.append({'type':dir,'hand':'right','amount':vx, 'confidence': confidence})
-                if tap3 and abs(vx)>0.06:
-                    confidence = min(1.0, abs(vx) / 0.1)
-                    events.append({'type':'app_switch','hand':'right', 'confidence': confidence})
-                if tap3 and vy < -0.06:
-                    confidence = min(1.0, abs(vy) / 0.1)
-                    events.append({'type':'task_view','hand':'right', 'confidence': confidence})
-                if tap3 and vy > 0.06:
-                    confidence = min(1.0, abs(vy) / 0.1)
-                    events.append({'type':'show_desktop','hand':'right', 'confidence': confidence})
-                if tap3 and abs(vx)<0.01 and abs(vy)<0.01:
-                    events.append({'type':'screenshot','hand':'right'})
-                # virtual desktops and snap left/right approximations
-                # detect 4 finger by checking ring/pinky proximity (approx)
-                # omitted explicit 4-finger calc for brevity
-            else:
-                if pinch_ti and not last.get('pinch_ti'):
-                    confidence = 1.0 - (d_ti / self.cfg.PINCH_THRESHOLD)
-                    events.append({'type':'volume_up','hand':'left', 'confidence': confidence})
-                if pinch_tm and not last.get('pinch_tm'):
-                    confidence = 1.0 - (d_tm / self.cfg.PINCH_THRESHOLD)
-                    events.append({'type':'volume_down','hand':'left', 'confidence': confidence})
-                if tap3 and not last.get('tap3'):
-                    events.append({'type':'mute_unmute','hand':'left'})
-                prev_h_any = None
-                for _,fr in list(self.history)[-3:]:
-                    for h in fr:
-                        if h['label']==ch['label']:
-                            prev_h_any = h; break
-                    if prev_h_any: break
-                if prev_h_any:
-                    prev_d = dist(prev_h_any['index'], prev_h_any['middle'])
-                    cur_d = dist(ch['index'], ch['middle'])
-                    if cur_d - prev_d > 0.02:
-                        confidence = min(1.0, (cur_d - prev_d) / 0.04)
-                        events.append({'type':'brightness_up','hand':'left', 'confidence': confidence})
-                    if prev_d - cur_d > 0.02:
-                        confidence = min(1.0, (prev_d - cur_d) / 0.04)
-                        events.append({'type':'brightness_down','hand':'left', 'confidence': confidence})
-                if abs(vx)>0.08 and abs(vy)<0.05:
-                    confidence = min(1.0, abs(vx) / 0.12)
-                    events.append({'type':'next_track' if vx>0 else 'prev_track','hand':'left', 'confidence': confidence})
-                if pinch_ti and last.get('hold_start') and (time.time()-last['hold_start'])>0.5:
-                    events.append({'type':'modifier_hold','hand':'left'})
-            last['pinch_ti'] = pinch_ti
-            last['pinch_im'] = pinch_im
-            last['pinch_tm'] = pinch_tm
-            last['tap3'] = tap3
-            self.hand_hist[key] = last
-        # both-hands
-        keys = list(cur_map.keys())
-        if len(keys)>=2:
-            a = cur_map[keys[0]]; b = cur_map[keys[1]]
-            da = dist(a['thumb'], a['index']); db = dist(b['thumb'], b['index'])
-            if da < self.cfg.PINCH_THRESHOLD and db < self.cfg.PINCH_THRESHOLD:
-                prev_pair = None
-                if len(self.history)>=2:
-                    prev_pair = self.history[-2][1]
-                if prev_pair and len(prev_pair)>=2:
-                    prev_dist = dist(prev_pair[0]['index'], prev_pair[1]['index'])
-                    cur_dist = dist(a['index'], b['index'])
-                    if cur_dist - prev_dist > 0.02:
-                        confidence = min(1.0, (cur_dist - prev_dist) / 0.04)
-                        events.append({'type':'zoom_in','hand':'both', 'confidence': confidence})
-                    if prev_dist - cur_dist > 0.02:
-                        confidence = min(1.0, (prev_dist - cur_dist) / 0.04)
-                        events.append({'type':'zoom_out','hand':'both', 'confidence': confidence})
-            try:
-                va = (a['index'][0]-a['wrist'][0], a['index'][1]-a['wrist'][1])
-                vb = (b['index'][0]-b['wrist'][0], b['index'][1]-b['wrist'][1])
-                ang = math.atan2(va[1],va[0]) - math.atan2(vb[1],vb[0])
-                if abs(ang) > 0.3:
-                    confidence = min(1.0, abs(ang) / 0.5)
-                    events.append({'type':'rotate','hand':'both','angle':ang, 'confidence': confidence})
-            except Exception:
-                pass
-            wrist_dist = dist(a['wrist'], b['wrist'])
-            if wrist_dist < 0.08:
-                events.append({'type':'lock_screen','hand':'both'})
-        final = []
+                    conf = self._calculate_confidence(1.0 - d_tm / self.cfg.PINCH_THRESHOLD)
+                    events.append({'type': 'middle_click', 'confidence': conf})
+
+                # Differentiate swipes from taps
+                is_stable = abs(vx) < 0.02 and abs(vy) < 0.02
+                is_swipe_x = abs(vx) > 0.05 and abs(vy) < 0.03
+                is_swipe_y = abs(vy) > 0.05 and abs(vx) < 0.03
+
+                tap3 = pinch_ti and pinch_im
+                if tap3 and not last.get('tap3', False) and is_stable:
+                     events.append({'type': 'screenshot', 'confidence': 1.0})
+
+                if tap3 and is_swipe_x:
+                    events.append({'type': 'app_switch', 'confidence': self._calculate_confidence(abs(vx) / 0.1)})
+                
+                if tap3 and is_swipe_y:
+                    direction = 'task_view' if vy < 0 else 'show_desktop'
+                    events.append({'type': direction, 'confidence': self._calculate_confidence(abs(vy) / 0.1)})
+
+            # Update history for the hand
+            self.hand_hist[key] = {'pinch_ti': pinch_ti, 'pinch_im': pinch_im, 'pinch_tm': pinch_tm, 'tap3': tap3}
+
+        # Filter events by confidence and apply cooldown
+        final_events = []
         for e in events:
-            k = e['type']
-            last = self.last_emitted.get(k, 0)
-            if time.time() - last > self.cfg.COOLDOWN:
-                if e.get('confidence', 1.0) > 0.5:
-                    final.append(e)
-                    self.last_emitted[k] = time.time()
-        return final
+            if e.get('confidence', 0) >= self.cfg.CONFIDENCE_THRESHOLD:
+                key = e['type']
+                if (now - self.last_emitted.get(key, 0)) > self.cfg.COOLDOWN:
+                    final_events.append(e)
+                    self.last_emitted[key] = now
+        
+        return final_events
