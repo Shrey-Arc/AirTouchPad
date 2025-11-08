@@ -112,6 +112,11 @@
    python launcher.py
    ```
 
+   (If working with WSL-2)
+   ```bash
+   python launcher_wsl.py
+   ```
+
 3. **Follow the Installation Wizard**
    - Accept the license agreement
    - Wait for automatic dependency installation
@@ -389,10 +394,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: support@airtouchpad.com
-- 💬 Discord: [Join our community](https://discord.gg/airtouchpad)
-- 📖 Documentation: [Wiki](https://github.com/yourusername/AirTouchPad/wiki)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/AirTouchPad/issues)
+- 📧 Email: [Mail Me](Shrey_Kumar@outlook.com)
+- 💬 Discord: [Join our community](https://discord.gg/rt93UXmFqT)
+- 📖 Documentation: [Wiki](https://github.com/Shrey-Arc/AirTouchPad/wiki)
+- 🐛 Issues: [GitHub Issues](https://github.com/Shrey-Arc/AirTouchPad/issues)
 
 ---
 
