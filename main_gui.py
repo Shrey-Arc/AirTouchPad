@@ -115,6 +115,22 @@ class MainGUI:
                                    state="readonly")
         camera_menu.pack(side="left", fill="x", expand=True)
         
+        # Model complexity selection
+        model_complexity_frame = tk.Frame(left_panel, bg=self.bg_color)
+        model_complexity_frame.pack(fill="x", pady=(0, 20))
+        
+        tk.Label(model_complexity_frame, text="Model Complexity:",
+                 font=("Segoe UI", 12),
+                 bg=self.bg_color, fg=self.fg_color).pack(side="left", padx=(0, 10))
+        
+        self.model_complexity_var = tk.StringVar(self.root)
+        self.model_complexity_var.set("0 (Lite)")
+        
+        model_complexity_menu = ttk.Combobox(model_complexity_frame, textvariable=self.model_complexity_var,
+                                             values=["0 (Lite)", "1 (Full)"],
+                                             state="readonly")
+        model_complexity_menu.pack(side="left", fill="x", expand=True)
+        
         # Start/Stop button
         self.toggle_btn = tk.Button(left_panel, text="🚀 Start AirTouchPad",
                                     command=self.toggle_core,
@@ -208,7 +224,8 @@ is minimized to tray.
     def start_core(self):
         try:
             camera_index = self.camera_var.get()
-            self.core_process = subprocess.Popen([sys.executable, 'beast_core.py', str(camera_index)],
+            model_complexity = self.model_complexity_var.get().split(" ")[0]
+            self.core_process = subprocess.Popen([sys.executable, 'beast_core.py', str(camera_index), str(model_complexity)],
                                                 stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE)
             self.toggle_btn.config(text="⏹️ Stop AirTouchPad",
