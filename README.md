@@ -394,7 +394,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: [Mail Me](Shrey_Kumar@outlook.com)
+- 📧 Email: **Shrey_Kumar@outlook.com**
 - 💬 Discord: [Join our community](https://discord.gg/rt93UXmFqT)
 - 📖 Documentation: [Wiki](https://github.com/Shrey-Arc/AirTouchPad/wiki)
 - 🐛 Issues: [GitHub Issues](https://github.com/Shrey-Arc/AirTouchPad/issues)
