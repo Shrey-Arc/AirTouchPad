@@ -80,11 +80,11 @@ class InstallerWizard:
         features.pack(pady=20)
         
         info = tk.Label(frame, 
-                        text="This wizard will guide you through the installation process.\n\n"
+                       text="This wizard will guide you through the installation process.\n\n"
                             "Click 'Next' to continue.",
-                        font=("Segoe UI", 11),
-                        fg=self.fg_color, bg=self.bg_color,
-                        justify="center")
+                       font=("Segoe UI", 11),
+                       fg=self.fg_color, bg=self.bg_color,
+                       justify="center")
         info.pack(pady=20)
         
         return frame
@@ -203,6 +203,7 @@ SOFTWARE.
         return frame
     
     def show_page(self, page_num):
+<<<<<<< HEAD
         self.current_page = page_num
 
         # Clear previous page
@@ -221,18 +222,31 @@ SOFTWARE.
         nav_frame.pack(fill="x", pady=(10, 0))
 
         # BACK BUTTON
+=======
+        # Clear container
+        for widget in self.container.winfo_children():
+            widget.destroy()
+        
+        # Create new page
+        page_frame = self.pages[page_num]()
+        page_frame.pack(fill="both", expand=True)
+        
+        # Navigation buttons
+        nav_frame = tk.Frame(self.container, bg=self.bg_color)
+        nav_frame.pack(side="bottom", fill="x", pady=(20, 0))
+        
+>>>>>>> parent of b389732 (modified using gcli)
         if page_num > 0:
-            tk.Button(
-                nav_frame, text="← Back",
-                command=lambda: self.show_page(page_num - 1),
-                font=("Segoe UI", 11),
-                bg="#3e3e4e", fg=self.fg_color,
-                padx=20, pady=8, relief="flat",
-                cursor="hand2"
-            ).pack(side="left")
-
-        # NEXT BUTTON
+            back_btn = tk.Button(nav_frame, text="← Back",
+                               command=lambda: self.show_page(page_num - 1),
+                               font=("Segoe UI", 11),
+                               bg="#3e3e4e", fg=self.fg_color,
+                               padx=20, pady=8, relief="flat",
+                               cursor="hand2")
+            back_btn.pack(side="left")
+        
         if page_num < len(self.pages) - 1:
+<<<<<<< HEAD
             if page_num == 1:  # License
                 cmd = lambda: self.proceed_from_license(page_num) # Fix: Correct lambda for license page
             elif page_num == 2:  # Dependencies auto-run
@@ -241,29 +255,36 @@ SOFTWARE.
                     daemon=True # Fix: Ensure thread is daemon
                 ).start()
                 return
+=======
+            if page_num == 1:  # License page
+                next_btn = tk.Button(nav_frame, text="Next →",
+                                   command=lambda: self.proceed_from_license(page_num),
+                                   font=("Segoe UI", 11, "bold"),
+                                   bg=self.accent_color, fg="#000",
+                                   padx=20, pady=8, relief="flat",
+                                   cursor="hand2")
+            elif page_num == 2:  # Dependencies page
+                # Start installation automatically
+                threading.Thread(target=self.install_dependencies, daemon=True).start()
+                return  # No next button, will auto-proceed
+>>>>>>> parent of b389732 (modified using gcli)
             else:
-                cmd = lambda: self.show_page(page_num + 1)
-
-            tk.Button(
-                nav_frame, text="Next →",
-                command=cmd,
-                font=("Segoe UI", 11, "bold"),
-                bg=self.accent_color, fg="#000",
-                padx=20, pady=8, relief="flat",
-                cursor="hand2"
-            ).pack(side="right")
-
-        # FINISH BUTTON
+                next_btn = tk.Button(nav_frame, text="Next →",
+                                   command=lambda: self.show_page(page_num + 1),
+                                   font=("Segoe UI", 11, "bold"),
+                                   bg=self.accent_color, fg="#000",
+                                   padx=20, pady=8, relief="flat",
+                                   cursor="hand2")
+            next_btn.pack(side="right")
         else:
-            tk.Button(
-                nav_frame, text="Finish ✓",
-                command=self.finish,
-                font=("Segoe UI", 11, "bold"),
-                bg=self.success_color, fg="#000",
-                padx=30, pady=8, relief="flat",
-                cursor="hand2"
-            ).pack(side="right")
-
+            finish_btn = tk.Button(nav_frame, text="Finish ✓",
+                                 command=self.finish,
+                                 font=("Segoe UI", 11, "bold"),
+                                 bg=self.success_color, fg="#000",
+                                 padx=30, pady=8, relief="flat",
+                                 cursor="hand2")
+            finish_btn.pack(side="right")
+    
     def proceed_from_license(self, page_num):
         if not self.accept_var.get(): # Fix: Check accept_var
             messagebox.showwarning("License Agreement",

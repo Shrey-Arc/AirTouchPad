@@ -1,9 +1,13 @@
 import cv2, mediapipe as mp
 from utils.config import Config
 class HandTracker:
+<<<<<<< HEAD
     def __init__(self, cfg: Config, camera_index: int = 0, model_complexity: int = 0):
+=======
+    def __init__(self, cfg: Config):
+>>>>>>> parent of b389732 (modified using gcli)
         self.cfg = cfg
-        self.cap = cv2.VideoCapture(camera_index)
+        self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.cfg.CAP_WIDTH)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.cfg.CAP_HEIGHT)
         self.mp = mp.solutions.hands

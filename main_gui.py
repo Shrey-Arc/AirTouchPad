@@ -10,9 +10,6 @@ import threading
 import os
 from pathlib import Path
 from utils.system_tray import SystemTrayApp
-from os_handlers import check_macos_permissions
-
-import cv2
 
 class MainGUI:
     def __init__(self):
@@ -38,24 +35,6 @@ class MainGUI:
         
         # Handle window close
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-
-        # Check for macOS permissions
-        if not check_macos_permissions():
-            messagebox.showinfo(
-                "Permissions Required",
-                "AirTouchPad requires Accessibility permissions to control your computer. "
-                "Please go to System Preferences > Security & Privacy > Privacy > Accessibility "
-                "and add this application to the list of allowed apps."
-            )
-
-    def get_available_cameras(self):
-        cameras = []
-        for i in range(10):
-            cap = cv2.VideoCapture(i)
-            if cap.isOpened():
-                cameras.append(i)
-                cap.release()
-        return cameras
     
     def create_ui(self):
         # Header
@@ -97,6 +76,7 @@ class MainGUI:
         left_panel = tk.Frame(content, bg=self.bg_color)
         left_panel.pack(side="left", fill="both", expand=True, padx=(0, 15))
         
+<<<<<<< HEAD
         # Camera selection
         camera_frame = tk.Frame(left_panel, bg=self.bg_color)
         camera_frame.pack(fill="x", pady=(0, 20))
@@ -131,6 +111,8 @@ class MainGUI:
                                              state="readonly")
         model_complexity_menu.pack(side="left", fill="x", expand=True)
         
+=======
+>>>>>>> parent of b389732 (modified using gcli)
         # Start/Stop button
         self.toggle_btn = tk.Button(left_panel, text="🚀 Start AirTouchPad",
                                     command=self.toggle_core,
@@ -223,9 +205,13 @@ is minimized to tray.
     
     def start_core(self):
         try:
+<<<<<<< HEAD
             camera_index = self.camera_var.get()
             model_complexity = self.model_complexity_var.get().split(" ")[0]
             self.core_process = subprocess.Popen([sys.executable, 'beast_core.py', str(camera_index), str(model_complexity)],
+=======
+            self.core_process = subprocess.Popen([sys.executable, 'beast_core.py'],
+>>>>>>> parent of b389732 (modified using gcli)
                                                 stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE)
             self.toggle_btn.config(text="⏹️ Stop AirTouchPad",
