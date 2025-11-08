@@ -32,6 +32,7 @@
 
 ---
 
+<!--
 ## 📸 Screenshots
 
 <div align="center">
@@ -49,7 +50,7 @@
 ![Debug Overlay](assets/screenshots/debug_overlay.png)
 
 </div>
-
+-->
 ---
 
 ## 🚀 Features
