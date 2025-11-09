@@ -112,7 +112,7 @@
    python launcher.py
    ```
 
-(If working with WSL-2)
+   (If working with WSL-2)
    ```bash
    python launcher_wsl.py
    ```
